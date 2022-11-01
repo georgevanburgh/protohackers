@@ -34,3 +34,5 @@ jobs:
             registry-password: ${{ secrets.REGISTRY_PASSWORD }}
             name: protohackers-server
             location: 'uk south'
+            cpu: 0.25
+            memory: 0.3
