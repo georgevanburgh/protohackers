@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /source
 
 # Copy csproj and restore as distinct layers
@@ -12,7 +12,7 @@ WORKDIR /source/server
 RUN dotnet publish -c release -o /out --no-restore
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine
 WORKDIR /app
 COPY --from=build /out ./
 ENTRYPOINT ["dotnet", "server.dll"]
