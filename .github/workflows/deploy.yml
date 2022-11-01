@@ -36,3 +36,4 @@ jobs:
             location: 'uk south'
             cpu: 0.25
             memory: 0.3
+            ports: '8080 8081 8082 8083 8084 8085'
