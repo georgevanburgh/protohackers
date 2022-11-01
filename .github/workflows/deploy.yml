@@ -24,17 +24,5 @@ jobs:
             docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/protohackers-server:${{ github.sha }}
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/protohackers-server:${{ github.sha }}
         - name: 'Deploy to Azure Container Instances'
-          uses: 'azure/aci-deploy@v1'
-          with:
-            resource-group: ${{ secrets.RESOURCE_GROUP }}
-            image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/protohackers-server:${{ github.sha }}
-            registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-            registry-username: ${{ secrets.REGISTRY_USERNAME }}
-            registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-            name: protohackers-server
-            location: 'uk south'
-            cpu: 0.5
-            memory: 0.5
-            ports: '8080 8081 8082 8083 8084 8085'
-            ip-address: public
-
+          run: |
+            az container create --resource-group protohackers --name protohackers-server --cpu 0.5 --memory 0.5 --image protohackers.azurecr.io/protohackers-server:${{ github.sha }} --ports 8080 --ports 8081 --registry-username ${{ secrets.REGISTRY_USERNAME }} --registry-password ${{ secrets.REGISTRY_PASSWORD }} --ip-address public -o none
