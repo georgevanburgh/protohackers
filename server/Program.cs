@@ -9,6 +9,11 @@ builder.WebHost.UseKestrel(options =>
     {
         builder.UseConnectionHandler<EchoConnectionHandler>();
     });
+
+    options.ListenAnyIP(8081, builder =>
+    {
+        builder.UseConnectionHandler<PrimeTimeHandler>();
+    });
 });
 
 var app = builder.Build();
