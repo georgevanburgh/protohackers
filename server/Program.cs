@@ -14,6 +14,11 @@ builder.WebHost.UseKestrel(options =>
     {
         builder.UseConnectionHandler<PrimeTimeHandler>();
     });
+
+    options.ListenAnyIP(8082, builder =>
+    {
+        builder.UseConnectionHandler<MeanPriceHandler>();
+    });
 });
 
 var app = builder.Build();

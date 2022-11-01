@@ -4,6 +4,8 @@ using System.IO.Pipelines;
 using System.Text.Json;
 using Microsoft.AspNetCore.Connections;
 
+namespace protohackers;
+
 public class PrimeTimeHandler : ConnectionHandler
 {
     private static readonly byte[] newline = new byte[] { (byte)'\n' };
