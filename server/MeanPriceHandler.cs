@@ -10,7 +10,7 @@ public class MeanPriceHandler : ConnectionHandler
     private readonly ILogger<MeanPriceHandler> _logger;
     private const int ResponseSizeBytes = 4;
     private const int MessageSizeBytes = 9;
-    private ConcurrentDictionary<string, SortedList<int, int>> priceStore = new();
+    private ConcurrentDictionary<string, SortedSet<InsertCommand>> priceStore = new();
 
     public MeanPriceHandler(ILogger<MeanPriceHandler> logger)
     {
@@ -61,10 +61,17 @@ public class MeanPriceHandler : ConnectionHandler
         switch (command)
         {
             case QueryCommand r:
-                var hasPrices = priceStore.TryGetValue(connectionId, out var prices);
-                var toAverage = prices?.Where(p => p.Key >= r.MinTime && p.Key <= r.MaxTime);
-
-                var average = hasPrices && toAverage is not null && toAverage.Any() ? toAverage.Average(p => p.Value) : 0;
+                int average = 0;
+                if (r.MinTime > r.MaxTime)
+                {
+                    average = 0;
+                }
+                else
+                {
+                    priceStore.TryGetValue(connectionId, out var rawPrices);
+                    var prices = rawPrices?.GetViewBetween(new InsertCommand { Timestamp = r.MinTime, Price = 0 }, new InsertCommand { Timestamp = r.MaxTime, Price = 0 });
+                    average = prices is not null & prices.Any() ? Convert.ToInt32(prices.Average(p => p.Price)) : 0;
+                }
 
                 Span<byte> buffer = stackalloc byte[ResponseSizeBytes];
                 if (!BitConverter.TryWriteBytes(buffer, Convert.ToInt32(average)))
@@ -76,10 +83,10 @@ public class MeanPriceHandler : ConnectionHandler
                 output.Write(buffer);
                 break;
             case InsertCommand r:
-                priceStore.AddOrUpdate(connectionId, _ => new SortedList<int, int> { { r.Timestamp, r.Price } }, (_, list) =>
+                priceStore.AddOrUpdate(connectionId, _ => new SortedSet<InsertCommand>(new InsertCommandComparer()) { { r } }, (_, set) =>
                 {
-                    list[r.Timestamp] = r.Price;
-                    return list;
+                    set.Add(r);
+                    return set;
                 });
                 break;
             default:
@@ -133,5 +140,13 @@ public class MeanPriceHandler : ConnectionHandler
     {
         public required int MinTime { get; init; }
         public required int MaxTime { get; init; }
+    }
+
+    private class InsertCommandComparer : IComparer<InsertCommand>
+    {
+        public int Compare(InsertCommand x, InsertCommand y)
+        {
+            return x.Timestamp.CompareTo(y.Timestamp);
+        }
     }
 }
